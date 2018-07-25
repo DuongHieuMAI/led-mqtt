@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/engineer/.platformio/penv/bin:/home/engineer/.platformio/penv:/opt/ros/kinetic/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/home/engineer/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin",
+        "PLATFORMIO_CALLER": "vscode"
+    }
+}
