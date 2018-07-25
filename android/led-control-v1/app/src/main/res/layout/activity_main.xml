@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="LED-CONTROL-v1" />
+
+        <Button
+            android:id="@+id/buttonLed1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="led-1-on" />
+
+        <Button
+            android:id="@+id/buttonLed2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="led-2-off" />
+
+        <Button
+            android:id="@+id/buttonLed3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="led-3-on" />
+
+        <Button
+            android:id="@+id/buttonLedAll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="led-all-on" />
+
+        <Button
+            android:id="@+id/buttonSubscribe"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="subscribe" />
+
+        <Button
+            android:id="@+id/buttonExit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Exit" />
+
+        <TextView
+            android:id="@+id/textView7"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Status: In Progress" />
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
