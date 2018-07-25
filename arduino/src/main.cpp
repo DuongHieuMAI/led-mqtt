@@ -14,15 +14,11 @@ MQTTClient mqttClient;
 
 IoTLed iotLed(8,2);
 IoTLed iotLed2(9,3);
-<<<<<<< HEAD
-StaticJsonBuffer<60> jsonBuffer;
-=======
 StaticJsonBuffer<60> jsonBufferCallback;
 
 
 StaticJsonBuffer<60> jsonBufferLoop;
 char jsonCharLoop[60];
->>>>>>> master
 
 void setup() {
     // pinMode(4, INPUT_PULLUP);
@@ -78,10 +74,7 @@ void setup() {
       root2["led-3"] = "online";
       char jsonChar2[60];
       root2.printTo(jsonChar2);
-<<<<<<< HEAD
-=======
       
->>>>>>> master
       Serial.println(jsonChar2);
       mqttClient.publishWithRetain(PUBLISH_TOPIC,jsonChar2,true);
     }
@@ -91,31 +84,6 @@ void setup() {
 
 void loop() {
   
-<<<<<<< HEAD
-  if((millis()-previousMillis)>=200) {
-    //200 ms elapsed
-    StaticJsonBuffer<50> jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
-    if(iotLed.getLedState()) {
-      root["led-1"] = "ON";
-      // mqttClient.publish(PUBLISH_TOPIC,"ON");
-    }
-    else {
-      root["led-1"] = "OFF";
-      // mqttClient.publish(PUBLISH_TOPIC,"OFF");
-    }
-    if(iotLed2.getLedState()) {
-      root["led-2"] = "ON";
-      // mqttClient.publish(PUBLISH_TOPIC,"ON");
-    }
-    else {
-      root["led-2"] = "OFF";
-      // mqttClient.publish(PUBLISH_TOPIC,"OFF");
-    }    
-    char jsonChar[60];
-    root.printTo(jsonChar);
-    mqttClient.publish(PUBLISH_TOPIC,jsonChar);
-=======
   if((millis()-previousMillis)>=500) {
     //200 ms elapsed
     JsonObject& rootLoop = jsonBufferLoop.createObject();
@@ -146,7 +114,6 @@ void loop() {
     }
     jsonBufferLoop.clear();
     // jsonCharLoop
->>>>>>> master
     previousMillis = millis();
   }
 
@@ -158,11 +125,7 @@ void loop() {
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-<<<<<<< HEAD
-    char msgBuffer[20];
-=======
     // char msgBuffer[20];
->>>>>>> master
     // I am only using one ascii character as command, so do not need to take an entire word as payload
     // However, if you want to send full word commands, uncomment the next line and use for string comparison
     // payload[length]='\0';// terminate string with 0
@@ -181,11 +144,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     String strPayload = String((char*)payload);  // convert to string
     Serial.println(strPayload);
 
-<<<<<<< HEAD
-    JsonObject& root = jsonBuffer.parseObject(strPayload);
-=======
     JsonObject& root = jsonBufferCallback.parseObject(strPayload);
->>>>>>> master
     if (!root.success()) {
         Serial.println("JSON: parseObject() failed");
         
