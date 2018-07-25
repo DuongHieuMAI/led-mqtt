@@ -19,8 +19,8 @@ void MQTTClient::initEthernet() {
 }
 void MQTTClient::initMQTTClient(void (*callback)(char*, uint8_t*, unsigned int)) {
     mqttClient.setClient(ethClient);
-    // mqttClient.setServer("ec2-18-136-58-212.ap-southeast-1.compute.amazonaws.com", 1883);//use public broker
-    mqttClient.setServer("test.mosquitto.org", 1883);//use public broker
+    mqttClient.setServer("ec2-18-136-58-212.ap-southeast-1.compute.amazonaws.com", 1883);//use public broker
+    // mqttClient.setServer("test.mosquitto.org", 1883);//use public broker
     mqttClient.setCallback(callback);
 }
 
@@ -28,12 +28,12 @@ void MQTTClient::subscribe(const char* topic) {
     mqttClient.subscribe(topic);
 }
 
-void MQTTClient::publish(const char *topic, const char *payload) {
-    mqttClient.publish(topic,payload);
+bool MQTTClient::publish(const char *topic, const char *payload) {
+    return mqttClient.publish(topic,payload);
 }
 
-void MQTTClient::publishWithRetain(const char *topic, const char *payload, const bool retain) {
-    mqttClient.publish(topic,payload,retain);
+bool MQTTClient::publishWithRetain(const char *topic, const char *payload, const bool retain) {
+    return mqttClient.publish(topic,payload,retain);
 }
 
 // IPAdress MQTTClient::getLocalIP() {

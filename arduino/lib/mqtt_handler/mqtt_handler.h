@@ -18,8 +18,8 @@ class MQTTClient {
     void initEthernet();
     void initMQTTClient(void (*callback)(char*, uint8_t*, unsigned int));
     void subscribe(const char* topic);
-    void publish(const char *topic, const char *payload);
-    void publishWithRetain(const char *topic, const char *payload, const bool retain);
+    bool publish(const char *topic, const char *payload);
+    bool publishWithRetain(const char *topic, const char *payload, const bool retain);
     void loop();
     bool connect();
     bool connectWithWill(const char *willTopic, const char *willMessage);
