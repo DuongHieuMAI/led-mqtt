@@ -143,7 +143,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     payload[length]='\0';// terminate string with 0
     String strPayload = String((char*)payload);  // convert to string
     Serial.println(strPayload);
-
+    jsonBufferCallback.clear();
     JsonObject& root = jsonBufferCallback.parseObject(strPayload);
     if (!root.success()) {
         Serial.println("JSON: parseObject() failed");
