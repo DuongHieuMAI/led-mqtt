@@ -10,6 +10,7 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.io.UnsupportedEncodingException;
 
@@ -20,7 +21,7 @@ public class MQTTClient {
     private MqttAndroidClient mqttAndroidClient;
 
     public MqttAndroidClient getMqttClient(Context context, String brokerUrl, String clientID) {
-        mqttAndroidClient = new MqttAndroidClient(context,brokerUrl,clientID);
+        mqttAndroidClient = new MqttAndroidClient(context,brokerUrl,clientID,new MemoryPersistence(), MqttAndroidClient.Ack.AUTO_ACK);
         try {
             IMqttToken token = mqttAndroidClient.connect(getMqttConnectionOption());
             token.setActionCallback(new IMqttActionListener() {
