@@ -1,8 +1,12 @@
 #include "iot_led.h"
+IoTLed::IoTLed() {
 
-IoTLed::IoTLed(const int ledPin, const int buttonPin) {
+}
+
+IoTLed::IoTLed(const char *ledName, const int ledPin, const int buttonPin) {
     this->ledPin = ledPin;
     this->buttonPin = buttonPin;
+    this->ledName = ledName;
     buttonPress = false;
     ledStatus = false;
 }
@@ -37,4 +41,12 @@ void IoTLed::setLedState(const bool ledState) {
 }
 bool IoTLed::getLedState() {
     return ledStatus;
+}
+
+char* IoTLed::getLedName() {
+    return ledName;    
+}
+
+void IoTLed::setLedName(const char *ledName) {
+    this->ledName = ledName;
 }
