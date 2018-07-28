@@ -19,11 +19,10 @@ const byte led_num = 2;
 IoTLed arrayIoTLed[led_num] {{"led-1",8,2},{"led-2",9,3}};
 // std::vector<IoTLed> ledList;
 
-StaticJsonBuffer<60> jsonBufferCallback;
+// StaticJsonBuffer<60> jsonBufferCallback;
 
 
-StaticJsonBuffer<60> jsonBufferLoop;
-char jsonCharLoop[60];
+
 
 void setup() {
     // pinMode(4, INPUT_PULLUP);
@@ -70,39 +69,60 @@ void setup() {
     //   mqttClient.subscribe(SUBSCRIBE_TOPIC);
     // }
     Serial.println("Setting will message...");
-    StaticJsonBuffer<60> jsonBuffer3;
-    JsonObject& root3 = jsonBuffer3.createObject();
+    StaticJsonBuffer<60> jsonBufferSettingMqtt;
+    JsonObject& rootWillMessage = jsonBufferSettingMqtt.createObject();
     for (byte i =0;i<led_num;i++) {
-      root3[arrayIoTLed[i].getLedName()] = "offline";
+      rootWillMessage[arrayIoTLed[i].getLedName()] = "offline";
     }
     char jsonChar3[60];
-    root3.printTo(jsonChar3);
+    rootWillMessage.printTo(jsonChar3);
     Serial.println(jsonChar3);
+    jsonBufferSettingMqtt.clear();
     
+    // if(mqttClient.connectWithWill(PUBLISH_TOPIC,jsonChar3)) {
+    //   mqttClient.subscribe(SUBSCRIBE_TOPIC);
+    //   // notify the online
+    //   Serial.println("Notify the online");
+    //   StaticJsonBuffer<60> jsonBuffer2;
+    //   JsonObject& root2 = jsonBuffer2.createObject();
+    //   for(byte i =0;i<led_num;i++){
+    //     root2[arrayIoTLed[i].getLedName()] = "online";
+    //   }
+    //   char jsonChar2[60];
+    //   root2.printTo(jsonChar2);
+      
+    //   Serial.println(jsonChar2);
+    //   mqttClient.publishWithRetain(PUBLISH_TOPIC,jsonChar2,true);
+    // }
+
     if(mqttClient.connectWithWill(PUBLISH_TOPIC,jsonChar3)) {
       mqttClient.subscribe(SUBSCRIBE_TOPIC);
       // notify the online
       Serial.println("Notify the online");
-      StaticJsonBuffer<60> jsonBuffer2;
-      JsonObject& root2 = jsonBuffer2.createObject();
+      // StaticJsonBuffer<60> jsonBuffer2;
+      JsonObject& rootOnlineMessage = jsonBufferSettingMqtt.createObject();
       for(byte i =0;i<led_num;i++){
-        root2[arrayIoTLed[i].getLedName()] = "online";
+        rootOnlineMessage[arrayIoTLed[i].getLedName()] = "online";
       }
       char jsonChar2[60];
-      root2.printTo(jsonChar2);
+      rootOnlineMessage.printTo(jsonChar2);
+      jsonBufferSettingMqtt.clear();
       
       Serial.println(jsonChar2);
       mqttClient.publishWithRetain(PUBLISH_TOPIC,jsonChar2,true);
     }
+
     Serial.println("Setup MQTT finished!");
     previousMillis = millis();
 }
 
 void loop() {
+  StaticJsonBuffer<60> jsonBufferGlobal;
+  char jsonCharLoop[60];
   
   if((millis()-previousMillis)>=250) {
     //200 ms elapsed
-    JsonObject& rootLoop = jsonBufferLoop.createObject();
+    JsonObject& rootLoop = jsonBufferGlobal.createObject();
 
     for(byte i =0;i<led_num;i++) {
       if(arrayIoTLed[i].getLedState()) {
@@ -121,7 +141,8 @@ void loop() {
       Serial.print("Publish MQTT msg failed: ");
     }
     Serial.println(jsonCharLoop);
-    jsonBufferLoop.clear();
+    jsonBufferGlobal.clear();
+    // rootLoop.
     // jsonCharLoop
     previousMillis = millis();
   }
@@ -148,15 +169,35 @@ void callback(char* topic, byte* payload, unsigned int length) {
     // }
     // Serial.println();
     // Serial.println(payload[0]);
-
     payload[length]='\0';// terminate string with 0
     String strPayload = String((char*)payload);  // convert to string
     Serial.println(strPayload);
-    jsonBufferCallback.clear();
+
+    StaticJsonBuffer<60> jsonBufferCallback;
     JsonObject& root = jsonBufferCallback.parseObject(strPayload);
     if (!root.success()) {
         Serial.println("JSON: parseObject() failed");        
         return;
+    }
+
+    const char* ledSetStateAll = root["led-all"];
+    if(ledSetStateAll){
+      String ledSetStateAllStr = String((char*)ledSetStateAll);
+      Serial.print("Command for all leds: ");
+      Serial.println(ledSetStateAllStr);
+      if(!ledSetStateAllStr.compareTo("ON")){        
+        for(byte i =0;i<led_num;i++){
+          arrayIoTLed[i].setLedState(true);        
+        }
+        return; 
+      } else if(!ledSetStateAllStr.compareTo("OFF")){
+        for(byte i =0;i<led_num;i++){
+          arrayIoTLed[i].setLedState(false);
+        }
+        return;
+      } else {
+        Serial.println("Command for all unknown!");
+      }
     }
     
     for(byte i =0;i<led_num;i++){
@@ -175,4 +216,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
         }
       }
     }
+
+    jsonBufferCallback.clear();
 }
