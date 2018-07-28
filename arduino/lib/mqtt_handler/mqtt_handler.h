@@ -22,6 +22,8 @@ class MQTTClient {
     bool publishWithRetain(const char *topic, const char *payload, const bool retain);
     void loop();
     bool connect();
+    bool connected();
+    int state();
     bool connectWithWill(const char *willTopic, const char *willMessage);
     // IPAddress getLocalIP();
     

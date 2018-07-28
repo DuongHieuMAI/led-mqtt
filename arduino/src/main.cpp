@@ -7,8 +7,8 @@
 #define PUBLISH_TOPIC "/user001/home001/room001/led/state"
 
 long previousMillis;
-unsigned long long startConnectTime = 0;
-long connectTime = 0;
+// unsigned long long startConnectTime = 0;
+// long connectTime = 0;
 
 void callback(char* topic, byte* payload, unsigned int length);
 MQTTClient mqttClient;
@@ -22,7 +22,7 @@ IoTLed arrayIoTLed[led_num] {{"led-1",8,2},{"led-2",9,3}};
 // StaticJsonBuffer<60> jsonBufferCallback;
 
 
-
+void connectMQTT();
 
 void setup() {
     // pinMode(4, INPUT_PULLUP);
@@ -41,27 +41,174 @@ void setup() {
     // setup serial communication
     Serial.begin(9600);
     while (!Serial) {};
-    Serial.println(F("Serial comm done."));
+    // Serial.println(F("Serial comm done."));
     Serial.println(F("===MQTT Arduino Demo==="));
-    Serial.println();
+    // Serial.println();
 
     //set up iot led
     Serial.println("Setting leds...");
     for(byte i =0; i< led_num; i++){
       arrayIoTLed[i].init();
     }
-    Serial.println("Getting led name...");
-    for(byte i =0; i< led_num; i++){
-      Serial.print("IoTLed ");
-      Serial.print(i+1);
-      Serial.print(" : ");
-      Serial.println(arrayIoTLed[i].getLedName());
-    }
+    // Serial.println("Getting led name...");
+    // for(byte i =0; i< led_num; i++){
+      // Serial.print("IoTLed ");
+      // Serial.print(i+1);
+      // Serial.print(" : ");
+      // Serial.println(arrayIoTLed[i].getLedName());
+    // }
     Serial.println("Setting leds done");
 
     // setup MQTT client
+    do {
+      Serial.println("Trying to connect to broker...");
+      connectMQTT();
+    } while (!mqttClient.connected());
+    Serial.println("Connected to broker");
+    Serial.println("-----------------------------------");
+    delay(1000);
+    previousMillis = millis();
+}
+
+void loop() {
+
+  if(mqttClient.connected()) {
+    StaticJsonBuffer<60> jsonBufferGlobal;
+    char jsonCharLoop[60];
+  
+    if((millis()-previousMillis)>=250) {
+      //200 ms elapsed
+      JsonObject& rootLoop = jsonBufferGlobal.createObject();
+
+      for(byte i =0;i<led_num;i++) {
+        if(arrayIoTLed[i].getLedState()) {
+          rootLoop[arrayIoTLed[i].getLedName()] = "ON";
+        } else {
+          rootLoop[arrayIoTLed[i].getLedName()] = "OFF";
+        }
+      }
+      
+      rootLoop.printTo(jsonCharLoop);
+      // char *jsonData = "jsonCharLoop";
+      // Serial.println(jsonCharLoop);
+      if (mqttClient.publish(PUBLISH_TOPIC,jsonCharLoop) == true) {
+        Serial.print("Published MQTT msg: ");      
+      } else {
+        Serial.print("Publish MQTT msg failed: ");
+      }
+      Serial.println(jsonCharLoop);
+      jsonBufferGlobal.clear();
+      // rootLoop.
+      // jsonCharLoop
+      mqttClient.loop();
+      previousMillis = millis();
+    }   
+    // mqttClient.loop();
+  } else {    
+    do {
+      Serial.println("Disconected to broker. Reconnecting...");
+      connectMQTT();
+    } while(!mqttClient.connected());
+  }
+   //check iot led
+  for(byte i =0;i<led_num;i++) {
+    arrayIoTLed[i].loop();
+  }  
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+    // char msgBuffer[20];
+    // I am only using one ascii character as command, so do not need to take an entire word as payload
+    // However, if you want to send full word commands, uncomment the next line and use for string comparison
+    // payload[length]='\0';// terminate string with 0
+  //String strPayload = String((char*)payload);  // convert to string
+    // Serial.println(strPayload); 
+    Serial.print("Message arrived [");
+    Serial.print(topic);
+    Serial.print("] ");//MQTT_BROKER
+    // for (int i = 0; i < length; i++) {
+    //   Serial.print((char)payload[i]);
+    // }
+    // Serial.println();
+    // Serial.println(payload[0]);
+    payload[length]='\0';// terminate string with 0
+    String strPayload = String((char*)payload);  // convert to string
+    Serial.println(strPayload);
+
+    StaticJsonBuffer<60> jsonBufferCallback;
+    JsonObject& root = jsonBufferCallback.parseObject(strPayload);
+    if (!root.success()) {
+        Serial.println("JSON: parseObject() failed");        
+        return;
+    }
+
+    // const char* ledSetStateAll = root["led-all"];
+    JsonVariant ledSetStateAll = root["led-all"];
+    if(ledSetStateAll.success())
+    {
+      // Serial.println(ledSetStateAll.as<char*>());
+      String ledSetStateAllStr = String(ledSetStateAll.as<String>());
+      // String ledSetStateAllStr;
+      // ledSetStateAll.printTo(ledSetStateAllStr);
+      // char temp[10] ="";
+      // ledSetStateAll.printTo(temp);
+      // Serial.println(temp);
+      // String ledSetStateAllStr = String((char*)temp);
+      Serial.print("Command for all leds: ");
+      Serial.println(ledSetStateAllStr);
+      Serial.println(ledSetStateAllStr.length());
+      // String on("ON");
+      // Serial.println(on.length());
+      if(!ledSetStateAllStr.compareTo("ON")){        
+        for(byte i =0;i<led_num;i++){
+          arrayIoTLed[i].setLedState(true);        
+        }
+        return; 
+      } else if(!ledSetStateAllStr.compareTo("OFF")){
+        for(byte i =0;i<led_num;i++){
+          arrayIoTLed[i].setLedState(false);
+        }
+        return;
+      } else {
+        Serial.println("Command for all unknown!");
+      }
+    } else {
+
+      for(byte i =0;i<led_num;i++)
+      {
+        JsonVariant ledSetState = root[arrayIoTLed[i].getLedName()];
+
+        if(ledSetState.success())
+        {        
+
+          int a;
+          a = 8;
+          Serial.println(a);
+
+          // String ledSetStateStr = String(ledSetState.as<String>());
+          // Serial.println(ledSetStateStr.length());
+        //   Serial.print(arrayIoTLed[i].getLedName());
+        //   Serial.print(" got command: ");
+        //   Serial.println(ledSetStateStr);
+
+          // if(!ledSetStateStr.compareTo("ON"))
+          // {
+          //   arrayIoTLed[i].setLedState(true);
+          // } else if(!ledSetStateStr.compareTo("OFF")){
+          //   arrayIoTLed[i].setLedState(false);
+          // } else {
+          //   Serial.println("Command unknown");
+          // }
+        }
+      }
+    }
+    jsonBufferCallback.clear();
+}
+
+void connectMQTT() {
+
     Serial.println("Setting MQTT...");
-    startConnectTime = millis();
+    // startConnectTime = millis();
     mqttClient.initEthernet();
     mqttClient.initMQTTClient(callback);
     delay(1000);
@@ -110,112 +257,9 @@ void setup() {
       
       Serial.println(jsonChar2);
       mqttClient.publishWithRetain(PUBLISH_TOPIC,jsonChar2,true);
+    } else {
+      Serial.println("Can not connect to broker!");
     }
 
     Serial.println("Setup MQTT finished!");
-    previousMillis = millis();
-}
-
-void loop() {
-  StaticJsonBuffer<60> jsonBufferGlobal;
-  char jsonCharLoop[60];
-  
-  if((millis()-previousMillis)>=250) {
-    //200 ms elapsed
-    JsonObject& rootLoop = jsonBufferGlobal.createObject();
-
-    for(byte i =0;i<led_num;i++) {
-      if(arrayIoTLed[i].getLedState()) {
-        rootLoop[arrayIoTLed[i].getLedName()] = "ON";
-      } else {
-        rootLoop[arrayIoTLed[i].getLedName()] = "OFF";
-      }
-    }
-    
-    rootLoop.printTo(jsonCharLoop);
-    // char *jsonData = "jsonCharLoop";
-    // Serial.println(jsonCharLoop);
-    if (mqttClient.publish(PUBLISH_TOPIC,jsonCharLoop) == true) {
-      Serial.print("Published MQTT msg: ");      
-    } else {
-      Serial.print("Publish MQTT msg failed: ");
-    }
-    Serial.println(jsonCharLoop);
-    jsonBufferGlobal.clear();
-    // rootLoop.
-    // jsonCharLoop
-    previousMillis = millis();
-  }
-
-  //check iot led
-  for(byte i =0;i<led_num;i++) {
-    arrayIoTLed[i].loop();
-  }
-  mqttClient.loop();
-}
-
-void callback(char* topic, byte* payload, unsigned int length) {
-    // char msgBuffer[20];
-    // I am only using one ascii character as command, so do not need to take an entire word as payload
-    // However, if you want to send full word commands, uncomment the next line and use for string comparison
-    // payload[length]='\0';// terminate string with 0
-  //String strPayload = String((char*)payload);  // convert to string
-    // Serial.println(strPayload); 
-    Serial.print("Message arrived [");
-    Serial.print(topic);
-    Serial.print("] ");//MQTT_BROKER
-    // for (int i = 0; i < length; i++) {
-    //   Serial.print((char)payload[i]);
-    // }
-    // Serial.println();
-    // Serial.println(payload[0]);
-    payload[length]='\0';// terminate string with 0
-    String strPayload = String((char*)payload);  // convert to string
-    Serial.println(strPayload);
-
-    StaticJsonBuffer<60> jsonBufferCallback;
-    JsonObject& root = jsonBufferCallback.parseObject(strPayload);
-    if (!root.success()) {
-        Serial.println("JSON: parseObject() failed");        
-        return;
-    }
-
-    const char* ledSetStateAll = root["led-all"];
-    if(ledSetStateAll){
-      String ledSetStateAllStr = String((char*)ledSetStateAll);
-      Serial.print("Command for all leds: ");
-      Serial.println(ledSetStateAllStr);
-      if(!ledSetStateAllStr.compareTo("ON")){        
-        for(byte i =0;i<led_num;i++){
-          arrayIoTLed[i].setLedState(true);        
-        }
-        return; 
-      } else if(!ledSetStateAllStr.compareTo("OFF")){
-        for(byte i =0;i<led_num;i++){
-          arrayIoTLed[i].setLedState(false);
-        }
-        return;
-      } else {
-        Serial.println("Command for all unknown!");
-      }
-    }
-    
-    for(byte i =0;i<led_num;i++){
-      const char* ledSetState = root[arrayIoTLed[i].getLedName()];
-      if(ledSetState){
-        Serial.print(arrayIoTLed[i].getLedName());
-        Serial.print(" got command: ");
-        Serial.println(ledSetState);
-        String ledSetStateStr = String((char*)ledSetState);
-        if(!ledSetStateStr.compareTo("ON")){
-          arrayIoTLed[i].setLedState(true);
-        } else if(!ledSetStateStr.compareTo("OFF")){
-          arrayIoTLed[i].setLedState(false);
-        } else {
-          Serial.println("Command unknown");
-        }
-      }
-    }
-
-    jsonBufferCallback.clear();
 }

@@ -48,6 +48,14 @@ bool MQTTClient::connectWithWill(const char *willTopic, const char *willMessage)
     return mqttClient.connect(CLIENT_ID,willTopic,0,true,willMessage);
 }
 
+bool MQTTClient::connected() {
+    return mqttClient.connected();
+}
+
+int MQTTClient::state(){
+    return mqttClient.state();
+}
+
 void MQTTClient::loop() {
     mqttClient.loop();
 }
